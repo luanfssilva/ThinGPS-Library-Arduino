@@ -1,3 +1,18 @@
+/*
+* ThinGPS.cpp
+*
+* Biblioteca para tratamento de dados NMEA
+*
+* Criado em 25 Agosto de 2016
+* Por Luan Felipe (github: @luanfssilva | Email: luanfelipebtu@hotmail.com), Ronitti Junner (email: ronittijuner@gmail.com)
+*
+* Modificado em 11 Fevereiro de 2019
+* Por Luan Felipe @luanfssilva
+*
+* MIT License
+*/
+
+
 #include "ThinGPS.h"
 
 ThinGPS::ThinGPS(HardwareSerial* serial){
@@ -12,11 +27,11 @@ void ThinGPS::init() {
     this->_ready = false;
 }
 
- 
+
  void ThinGPS::begin(unsigned long baud) {
     this->GPSSerial->begin(baud);
  }
- 
+
  void ThinGPS::send_command(const char* cmd) {
      this->GPSSerial->println(cmd);
  }
@@ -24,7 +39,7 @@ void ThinGPS::init() {
      return this->_ready;
 }
 
- 
+
  char ThinGPS::read() {
      char c = 0;
      if(this->GPSSerial->available()) {
@@ -41,25 +56,25 @@ void ThinGPS::init() {
              this->_newnmea = true;
              this->index = 0;
          } else {
-             this->_current[this->index++] = c; 
+             this->_current[this->index++] = c;
              if (this->index > MAX_CHARS_NMEA) this->index = 0;
          }
      }
      return c;
  }
- 
- 
- 
+
+
+
  boolean ThinGPS::have_newnmea() {
      return this->_newnmea;
 }
 
- 
+
  char* ThinGPS::get_newnmea() {
      this->_newnmea = false;
      return (char *) this->_last;
 }
- 
+
  //Faz a validacao da String NMEA
  boolean ThinGPS::is_validnmea(char* nmea) {
     unsigned int sum = 0; int i = 0;
@@ -78,14 +93,14 @@ void ThinGPS::init() {
     if(sum == checksum) return true;
     return false;
 }
- 
- 
+
+
  void ThinGPS::update() {
      if (this->have_newnmea()) {
          char *nmea = this->get_newnmea();
          if ( this->is_validnmea(nmea)) {
              this->parse(nmea);
-         } 
+         }
      }
 }
  //Extrai os dados GPRMC e GPGGA
@@ -105,9 +120,9 @@ void ThinGPS::init() {
          p = strchr(p, ',')+1;
          if (p[0] == 'W') this->gps_data.longitude *= -1;
          _parse_speed((p = (strchr(p, ',')+1)), &this->gps_data.speed);
-         p = strchr(p, ',')+1; 
-         _parse_date((p = (strchr(p, ',')+1)), &this->gps_data.day, &this->gps_data.month, &this->gps_data.year);         
-         
+         p = strchr(p, ',')+1;
+         _parse_date((p = (strchr(p, ',')+1)), &this->gps_data.day, &this->gps_data.month, &this->gps_data.year);
+
      } else if (strstr(nmea, "$GPGGA") && this->_ready) {
          //Serial.println(nmea);
          char* p = nmea;
@@ -144,7 +159,7 @@ void ThinGPS::init() {
      char *p = str+d;
      float min = atof(p);
      min = min/60;
-     *pos = pos_fix+min;     
+     *pos = pos_fix+min;
 }
  //Extrai a Velocidade
  void ThinGPS::_parse_speed(char* str, float* speed) {
